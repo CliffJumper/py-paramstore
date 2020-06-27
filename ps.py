@@ -95,7 +95,7 @@ class ParameterStore:
 
     def dump_params(self, file_name='parameters.yml'):
         with open(file_name, 'w') as file:
-            documents = yaml.dump(self.parameters, file)
+            yaml.dump(self.parameters, file)
 
     def put_param(self, parameter, overwrite=False):
         print('Putting Parameter: ', parameter)

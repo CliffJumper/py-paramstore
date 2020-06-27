@@ -68,7 +68,7 @@ if __name__ == '__main__':
 
     fm = FileManager(args.file)
 
-    params = param_store.get_params()
+    params = param_store.get_params(path=args.key)
 
     # Handle pulling params
     if args.get:

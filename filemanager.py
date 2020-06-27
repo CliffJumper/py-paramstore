@@ -35,7 +35,7 @@ class FileManager:
         with open(self.fname, 'r') as file:
             if self.format == 'yaml':
                 # print("Reading yaml")
-                self.data = yaml.safe_load(file, Loader=yaml.FullLoader)
+                self.data = yaml.safe_load(file)
             elif self.format == 'json':
                 # print("Reading JSON")
                 self.data = json.load(file)
