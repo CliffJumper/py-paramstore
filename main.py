@@ -20,11 +20,11 @@ def setup_args():
         "key", type=str, help="Parameter Store Key or 'Tree' to manipulate")
 
     parser.add_argument(
-        "-r", "--recurse", help="Recurse keys, manipulating the tree",
+        "-r", "--recurse", help="Recurse keys, manipulating the tree (DEFAULT IS TRUE)",
         action='store_true')
 
     parser.add_argument(
-        "-x", "--decrypt", help="Request Decryption of parameters (DEFAULT IS TRUE)",
+        "-x", "--decrypt", help="Request Decryption of parameters (DEFAULT IS FALSE)",
         action='store_true')
 
     parser.add_argument(
@@ -39,10 +39,10 @@ def setup_args():
         "-u", "--update", help="Push Parameter updates from local file",
         action='store_true', default=False)
 
-    parser.add_argument("--region", help="AWS Region for migration")
+    parser.add_argument("--region", help="AWS Region for migration (defaults to us-east-1)")
 
     parser.add_argument(
-        "-q", "--quiet", help="Suppress output (better for piping", action='store_true', default=False)
+        "-q", "--quiet", help="Suppress output (better for piping)", action='store_true', default=False)
 
     # Parse Args
     return parser.parse_args()
@@ -59,16 +59,16 @@ if __name__ == '__main__':
 
     # Get AWS Session for Parameter Store
     if args.profile is not None:
-        param_store = ParameterStore(profile=args.profile)
+        param_store = ParameterStore(region=args.region, profile=args.profile)
     elif args.arn is not None:
-        param_store = ParameterStore(arn=args.arn)
+        param_store = ParameterStore(region=args.region, arn=args.arn)
     else:
         # Create source using AWS default profile
-        param_store = ParameterStore()
+        param_store = ParameterStore(region=args.region)
 
     fm = FileManager(args.file)
 
-    params = param_store.get_params(path=args.key)
+    params = param_store.get_params(path=args.key, decryption=args.decrypt)
 
     # Handle pulling params
     if args.get:
@@ -78,25 +78,31 @@ if __name__ == '__main__':
 
     if args.update:
         local_params = fm.read()
-        diff_list = []
+        diff_list = { 'Parameters': [] }
+        diffs_found=False
 
         # Compare local and remote params
         print('Parameters to add:')
-        for i in local_params:
-            if i not in params:
+        for i in local_params['Parameters']:
+            if i not in params['Parameters']:
+                diffs_found=True
                 print('Found New/Changed Parameter:')
                 print(yaml.dump(i))
-                diff_list += [i]
-        val = input('APPLY these updates? (only "apply" will apply)')
-        if val == 'apply':
-            print('APPLYING UPDATE')
-            for i in diff_list:
-                param_store.put_param(i, overwrite=True)
-            print('PARAMETERS UPDATED')
-            exit(0)
+                diff_list['Parameters'] += [i]
+        if diffs_found:
+            val = input('APPLY these updates? (only "apply" will apply)')
+            if val == 'apply':
+                print('APPLYING UPDATE')
+                for i in diff_list['Parameters']:
+                    param_store.put_param(i, overwrite=True)
+                print('PARAMETERS UPDATED')
+                exit(0)
+            else:
+                print('UPDATE ABORTED')
+                exit(1)
         else:
-            print('UPDATE ABORTED')
-            exit(1)
+            print("No updates found")
+            exit(0)
 
     (not args.quiet) and print("No operation specified; dumping AWS params:")
     param_store.print_params()

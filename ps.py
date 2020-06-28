@@ -54,7 +54,7 @@ class ParameterStore:
         return client
 
     def get_params(self, path='/', recursive=True, decryption=False, next=''):
-        self.parameters = []
+        self.parameters = { 'Parameters': [] }
 
         if next != '':
             try:
@@ -67,13 +67,19 @@ class ParameterStore:
             except ClientError as error:
                 print('Error getting parameters:')
                 print(error)
+                raise Exception(error)
         else:
-            response = self.client.get_parameters_by_path(
-                Path=path,
-                Recursive=recursive,
-                WithDecryption=decryption,
-            )
-        
+            try:
+                response = self.client.get_parameters_by_path(
+                    Path=path,
+                    Recursive=recursive,
+                    WithDecryption=decryption,
+                )
+            except ClientError as error:
+                print('Error getting parameters:')
+                print(error)
+                raise Exception(error)
+
         # Filter the data to only the keys we care about
         # print(response['Parameters'])
         for i in response['Parameters']:
@@ -82,11 +88,11 @@ class ParameterStore:
                 'Type': i['Type'],
                 'Value': i['Value']
             }]
-            self.parameters += param
+            self.parameters['Parameters'] += param
 
         if 'NextToken' in response:
-            self.parameters += (self.get_params(path, recursive, decryption,
-                                                next=response['NextToken']))
+            self.parameters['Parameters'] += (self.get_params(path, recursive, decryption,
+                                                next=response['NextToken']))['Parameters']
 
         return self.parameters
 
@@ -110,11 +116,16 @@ class ParameterStore:
             print('Dumping error code and message')
             print(e.response['Error']['Code']+':',
                   e.response['Error']['Message'])
-            exit(-2)
+            raise Exception(e)
 
     def rm_param(self, parameter):
+        try:
+            self.client.delete_parameter(parameter['Name'])
+        except ClientError as e:
+            print('Error deleting parameters:')
+            print(e)
+            raise Exception(e)
 
-        self.client.delete_parameter(parameter['Name'])
 
 
 if __name__ == '__main__':
