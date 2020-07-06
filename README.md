@@ -32,3 +32,14 @@ A general scenario for migration or updating of many parameters:
 2. Open `parameters.yml` with your favorite editor to change parameter values.
 3. Push updates with a command like `python main.py "/parameter/path" -u --region "us-east-2"`
 
+## Development
+
+This is a work in progress.  I'm using pipenv, so try `pipenv install --dev` if you want to hack at it.
+
+To have a deterministic build, just `pipenv install --ignore-pipfile`
+
+## Distribution (WIP:  HERE THERE BE DRAGONS)
+
+I'm planning on using pyenv, pipenv, and pyinstaller, so `pyinstaller main.py` (or something like it) to make the executable.  
+This requires 'framework' so for your pyenv you probably have to `PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.8.2` 
+to make pyinstaller work
