@@ -6,6 +6,7 @@ import yaml
 class ParameterStore:
     def __init__(self, region='us-east-1', arn=None, profile=None):
         self.client = self.create_client(region, arn, profile)
+        self.parameters = {'Parameters': []}
 
     def create_client(self, region='us-east-1', arn=None, profile=None):
         client = None
@@ -54,7 +55,7 @@ class ParameterStore:
         return client
 
     def get_params(self, path='/', recursive=True, decryption=False, next=''):
-        self.parameters = { 'Parameters': [] }
+        parameters = {'Parameters': []}
 
         if next != '':
             try:
@@ -88,11 +89,13 @@ class ParameterStore:
                 'Type': i['Type'],
                 'Value': i['Value']
             }]
-            self.parameters['Parameters'] += param
+            parameters['Parameters'] += param
 
         if 'NextToken' in response:
-            self.parameters['Parameters'] += (self.get_params(path, recursive, decryption,
-                                                next=response['NextToken']))['Parameters']
+            parameters['Parameters'] += (self.get_params(path, recursive, decryption,
+                                                         next=response['NextToken']))['Parameters']
+
+        self.parameters = parameters
 
         return self.parameters
 
@@ -127,16 +130,14 @@ class ParameterStore:
             raise Exception(e)
 
 
-
 if __name__ == '__main__':
     ps = ParameterStore()
 
     # print(json.dumps(ps.get_params('/team-rocket/'), indent=2))
-    
+
     params = ps.get_params('/MAN-VIPAR/')
     # yaml.dump(params)
     print(yaml.dump(params))
-
 
     # for i in params:
     #     print("NAME: ", i['Name'])
