@@ -43,3 +43,5 @@ To have a deterministic build, just `pipenv install --ignore-pipfile`
 I'm planning on using pyenv, pipenv, and pyinstaller, so `pyinstaller main.py` (or something like it) to make the executable.  
 This requires 'framework' so for your pyenv you probably have to `PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.8.2` 
 to make pyinstaller work
+
+dumb pr test
