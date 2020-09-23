@@ -39,7 +39,8 @@ def setup_args():
         "-u", "--update", help="Push Parameter updates from local file",
         action='store_true', default=False)
 
-    parser.add_argument("--region", help="AWS Region for migration (defaults to us-east-1)")
+    parser.add_argument(
+        "--region", help="AWS Region for migration (defaults to us-east-1)")
 
     parser.add_argument(
         "-q", "--quiet", help="Suppress output (better for piping)", action='store_true', default=False)
@@ -68,7 +69,9 @@ if __name__ == '__main__':
 
     fm = FileManager(args.file)
 
-    params = param_store.get_params(path=args.key, decryption=args.decrypt)
+    params = param_store.get_params(
+        path=args.key, decryption=args.decrypt)['Parameters']
+    params = sorted(params, key=lambda i: i['Name'])
 
     # Handle pulling params
     if args.get:
@@ -77,15 +80,17 @@ if __name__ == '__main__':
         exit(0)
 
     if args.update:
-        local_params = fm.read()
-        diff_list = { 'Parameters': [] }
-        diffs_found=False
+        local_params = fm.read()['Parameters']
+        local_params = sorted(local_params, key=lambda i: i['Name'])
+        local_params.sort()
+        diff_list = {'Parameters': []}
+        diffs_found = False
 
         # Compare local and remote params
         print('Parameters to add:')
         for i in local_params['Parameters']:
             if i not in params['Parameters']:
-                diffs_found=True
+                diffs_found = True
                 print('Found New/Changed Parameter:')
                 print(yaml.dump(i))
                 diff_list['Parameters'] += [i]
@@ -104,5 +109,4 @@ if __name__ == '__main__':
             print("No updates found")
             exit(0)
 
-    (not args.quiet) and print("No operation specified; dumping AWS params:")
     param_store.print_params()

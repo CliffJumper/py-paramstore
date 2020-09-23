@@ -46,7 +46,7 @@ class FileManager:
 
         if data is not None:
             # print("write: setting data")
-            self.data = data
+            self.data['Parameters'] = data
 
         with open(self.fname, 'w') as file:
             if self.format == 'yaml':
