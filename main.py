@@ -2,6 +2,7 @@ from ps import ParameterStore
 from filemanager import FileManager
 import argparse
 import yaml
+import sys
 
 
 def setup_args():
@@ -71,6 +72,9 @@ if __name__ == '__main__':
 
     params = param_store.get_params(
         path=args.key, decryption=args.decrypt)['Parameters']
+    if not params:
+        sys.exit('No remote Paramters found')
+
     params = sorted(params, key=lambda i: i['Name'])
 
     # Handle pulling params
@@ -81,15 +85,16 @@ if __name__ == '__main__':
 
     if args.update:
         local_params = fm.read()['Parameters']
+        if not local_params:
+            sys.exit('No local parameters found!')
         local_params = sorted(local_params, key=lambda i: i['Name'])
-        local_params.sort()
         diff_list = {'Parameters': []}
         diffs_found = False
 
         # Compare local and remote params
         print('Parameters to add:')
-        for i in local_params['Parameters']:
-            if i not in params['Parameters']:
+        for i in local_params:
+            if i not in params:
                 diffs_found = True
                 print('Found New/Changed Parameter:')
                 print(yaml.dump(i))
