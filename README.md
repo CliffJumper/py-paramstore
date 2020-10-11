@@ -38,6 +38,10 @@ This is a work in progress.  I'm using pipenv, so try `pipenv install --dev` if 
 
 To have a deterministic build, just `pipenv install --ignore-pipfile`
 
+I've added a .devcontainer folder so if you have VSCode with the Remote Container extension and Docker installed,
+you can have a containerized dev environemnt (right version of python + pipenv already installed).  
+See https://code.visualstudio.com/docs/remote/containers#_sharing-git-credentials-with-your-container for details
+
 ## Distribution (WIP:  HERE THERE BE DRAGONS)
 
 I'm planning on using pyenv, pipenv, and pyinstaller, so `pyinstaller main.py` (or something like it) to make the executable.  
