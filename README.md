@@ -3,7 +3,7 @@ Python tool for manipulating AWS Parameter Store parameters
 
 ## Usage
 ```
-usage: main.py [-h] [-p PROFILE | -a ARN] [-r] [-x] [-f FILE] [-g] [-u] [--region REGION] [-q] key
+usage: py-paramstore.py [-h] [-p PROFILE | -a ARN] [-r] [-x] [-f FILE] [-g] [-u] [--region REGION] [-q] key
 
 positional arguments:
   key                   Parameter Store Key or 'Tree' to manipulate
@@ -28,15 +28,18 @@ This tool can be used for pulling an putting AWS parameter store parameters.  Th
 If you pass the `-x` or `--decrypt` option, your SecureStrings will be displayed or stored in **PLAINTEXT**
 
 A general scenario for migration or updating of many parameters:
-1. Pull down parameters with a command like: `python main.py "/parameter/path" -x --region "us-east-2" -g`
+1. Pull down parameters with a command like: `./py-paramstore.py "/parameter/path" -x --region "us-east-2" -g`
 2. Open `parameters.yml` with your favorite editor to change parameter values.
 3. Push updates with a command like `python main.py "/parameter/path" -u --region "us-east-2"`
 
 ## Development
 
+THE BELOW MAY CHANGE
+
 This is a work in progress.  I'm using pipenv, so try `pipenv install --dev` if you want to hack at it.
 
 To have a deterministic build, just `pipenv install --ignore-pipfile`
+
 
 I've added a .devcontainer folder so if you have VSCode with the Remote Container extension and Docker installed,
 you can have a containerized dev environemnt (right version of python + pipenv already installed).  
