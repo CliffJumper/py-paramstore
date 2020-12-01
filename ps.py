@@ -4,9 +4,42 @@ import yaml
 
 
 class ParameterStore:
-    def __init__(self, region='us-east-1', arn=None, profile=None):
-        self.client = self.create_client(region, arn, profile)
+    def __init__(self, args):
+        region = args.region or 'us-east-1'
+        self.client = self.create_client(region, args.arn, args.profile)
         self.parameters = {'Parameters': []}
+
+    def create_assumerole_client(self, arn, region):
+        try:
+            awsClient = boto3.client('sts', region)
+            stsresponse = awsClient.assume_role(
+                RoleArn=arn,
+                RoleSessionName='crossaccountession'
+            )
+
+            # Create the client
+            client = boto3.client(
+                'ssm',
+                region,
+                aws_access_key_id=stsresponse["Credentials"]["AccessKeyId"],
+                aws_secret_access_key=stsresponse["Credentials"]["SecretAccessKey"],
+                aws_session_token=stsresponse["Credentials"]["SessionToken"]
+            )
+        except ClientError as e:
+            print(e.response['Error']['Code']+':',
+                  e.response['Error']['Message'])
+            raise Exception(e)
+        return client
+
+    def create_profile_client(self, profile, region):
+        try:
+            dev = boto3.session.Session(profile_name=profile)
+            client = dev.client('ssm', region)
+        except ClientError as e:
+            print(e.response['Error']['Code']+':',
+                  e.response['Error']['Message'])
+            raise Exception(e)
+        return client
 
     def create_client(self, region='us-east-1', arn=None, profile=None):
         client = None
@@ -22,48 +55,22 @@ class ParameterStore:
 
         elif arn is not None:
             # Use ARN to switch Role and create the client
-            try:
-                awsClient = boto3.client('sts', region)
-                stsresponse = awsClient.assume_role(
-                    RoleArn=arn,
-                    RoleSessionName='crossaccountession'
-                )
-
-                # Create the client
-                client = boto3.client(
-                    'ssm',
-                    region,
-                    aws_access_key_id=stsresponse["Credentials"]["AccessKeyId"],
-                    aws_secret_access_key=stsresponse["Credentials"]["SecretAccessKey"],
-                    aws_session_token=stsresponse["Credentials"]["SessionToken"]
-                )
-            except ClientError as e:
-                print(e.response['Error']['Code']+':',
-                      e.response['Error']['Message'])
-                raise Exception(e)
+            client = self.create_assumerole_client(arn, region)
 
         elif profile is not None:
             # Use Profile to create a session the client
-            try:
-                dev = boto3.session.Session(profile_name=profile)
-                client = dev.client('ssm', region)
-            except ClientError as e:
-                print(e.response['Error']['Code']+':',
-                      e.response['Error']['Message'])
-                raise Exception(e)
+            client = self.create_profile_client(profile, region)
 
         return client
 
-    def get_params(self, path='/', recursive=True, decryption=False, next=''):
-        parameters = {'Parameters': []}
-
-        if next != '':
+    def get_parameters_helper(self, path, recurse, decrypt, nextToken=''):
+        if nextToken != '':
             try:
                 response = self.client.get_parameters_by_path(
                     Path=path,
-                    Recursive=recursive,
-                    WithDecryption=decryption,
-                    NextToken=next
+                    Recursive=recurse,
+                    WithDecryption=decrypt,
+                    NextToken=nextToken
                 )
             except ClientError as error:
                 print('Error getting parameters:')
@@ -73,17 +80,23 @@ class ParameterStore:
             try:
                 response = self.client.get_parameters_by_path(
                     Path=path,
-                    Recursive=recursive,
-                    WithDecryption=decryption,
+                    Recursive=recurse,
+                    WithDecryption=decrypt,
                 )
             except ClientError as error:
                 print('Error getting parameters:')
                 print(error)
                 raise Exception(error)
+        return response
 
+    def get_params(self, path='/', recursive=True, decryption=False, nextToken=''):
+        parameters = {'Parameters': []}
+
+        resp = self.get_parameters_helper(
+            path, recursive, decryption, nextToken)
         # Filter the data to only the keys we care about
         # print(response['Parameters'])
-        for i in response['Parameters']:
+        for i in resp['Parameters']:
             param = [{
                 'Name': i['Name'],
                 'Type': i['Type'],
@@ -91,9 +104,9 @@ class ParameterStore:
             }]
             parameters['Parameters'] += param
 
-        if 'NextToken' in response:
+        if 'NextToken' in resp:
             parameters['Parameters'] += (self.get_params(path, recursive, decryption,
-                                                         next=response['NextToken']))['Parameters']
+                                                         nextToken=resp['NextToken']))['Parameters']
 
         self.parameters = parameters
 
@@ -133,26 +146,7 @@ class ParameterStore:
 if __name__ == '__main__':
     ps = ParameterStore()
 
-    # print(json.dumps(ps.get_params('/team-rocket/'), indent=2))
-
     params = ps.get_params('/MAN-VIPAR/')
+
     # yaml.dump(params)
     print(yaml.dump(params))
-
-    # for i in params:
-    #     print("NAME: ", i['Name'])
-    #     print("\tType: ", i['Type'])
-    #     print("\tValue: ", i['Value'])
-    #     print("\tVersion: ", i['Version'])
-
-    # file = open("settlement-kv-export.json", 'r')
-    # print(json.dumps(json.load(file), indent=2))
-
-    #  Create Class and test it
-
-    # param_list = get_param_page(
-    #     client=pp,
-    #     path='/team-rocket/',
-    #     recursive=True,
-    #     decryption=True
-    # )
