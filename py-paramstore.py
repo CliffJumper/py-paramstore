@@ -111,13 +111,14 @@ def main():
 
         added, removed = list_compare(local_params, params)
 
+        # TODO: Move this to a function or module
         if not added == [] or not removed == []:
 
             print('Parameters to add:')
-            print(added)
+            print(yaml.dump(added))
 
             print('Parameters to remove:')
-            print(removed)
+            print(yaml.dump(removed))
 
             val = input('APPLY these updates? (only "apply" will apply) ')
             if val == 'apply':
