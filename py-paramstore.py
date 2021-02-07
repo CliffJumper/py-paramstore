@@ -5,6 +5,7 @@ import argparse
 import yaml
 import sys
 from pathlib import Path
+import itertools
 
 
 def setup_args():
@@ -56,7 +57,8 @@ def get_params(param_store, args):
     params = param_store.get_params(
         path=args.key, decryption=args.decrypt)['Parameters']
     if not params:
-        val = input('No existing remote Paramters found. Should I get the parent tree?')
+        val = input(
+            'No existing remote Paramters found. Should I get the parent tree?')
         if val.upper() == 'YES' or val.upper == 'Y':
             parent_path = Path(args.key)
             params = param_store.get_params(
@@ -67,6 +69,12 @@ def get_params(param_store, args):
             sys.exit('Aborting')
 
     return sorted(params, key=lambda i: i['Name'])
+
+
+def list_compare(list1, list2):
+    removed = list(itertools.filterfalse(lambda i: i in list1, list2))
+    added = list(itertools.filterfalse(lambda i: i in list2, list1))
+    return added, removed
 
 
 def main():
@@ -100,33 +108,30 @@ def main():
         if not local_params:
             sys.exit('No local parameters found!')
         local_params = sorted(local_params, key=lambda i: i['Name'])
-        diff_list = {'Parameters': []}
-        diffs_found = False
 
-        # Compare local and remote params
-        print('Parameters to add:')
-        for i in local_params:
-            if i not in params:
-                diffs_found = True
-                print('Found New/Changed Parameter:')
-                print(yaml.dump(i))
-                diff_list['Parameters'] += [i]
-        if diffs_found:
+        added, removed = list_compare(local_params, params)
+
+        if not added == [] or not removed == []:
+
+            print('Parameters to add:')
+            print(added)
+
+            print('Parameters to remove:')
+            print(removed)
+
             val = input('APPLY these updates? (only "apply" will apply)')
             if val == 'apply':
-                print('APPLYING UPDATE')
-                for i in diff_list['Parameters']:
+                for i in removed:
+                    if list(filter(lambda x: x['Name'] == i['Name'], added)) == []:
+                        param_store.rm_param(i)
+                for i in added:
                     param_store.put_param(i, overwrite=True)
-                print('PARAMETERS UPDATED')
-                exit(0)
             else:
                 print('UPDATE ABORTED')
-                exit(1)
+                exit(0)
         else:
-            print("No updates found")
+            print('No updates found')
             exit(0)
-
-    param_store.print_params()
 
 
 if __name__ == '__main__':

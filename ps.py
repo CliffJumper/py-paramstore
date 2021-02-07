@@ -135,8 +135,9 @@ class ParameterStore:
             raise Exception(e)
 
     def rm_param(self, parameter):
+        print('Removing Parameter: ', parameter)
         try:
-            self.client.delete_parameter(parameter['Name'])
+            self.client.delete_parameter(Name=parameter['Name'])
         except ClientError as e:
             print('Error deleting parameters:')
             print(e)

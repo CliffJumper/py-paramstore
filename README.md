@@ -32,6 +32,18 @@ A general scenario for migration or updating of many parameters:
 2. Open `parameters.yml` with your favorite editor to change parameter values.
 3. Push updates with a command like `python main.py "/parameter/path" -u --region "us-east-2"`
 
+## UPDATED BEHAVIOR ##
+This tool used to add parameters only.  With the updated comparison logic, it will set the parameters in Param Store to what
+is represented in the input file!
+
+This means that if you have a parameter in Param Store and it's NOT in the input file, **THAT PARAMETER WILL BE DELETED!**
+Make sure you look at the lists of paramters to be added and removed!
+
+Also, the presentation of parameters whose values have changed is not yet finished.  So you'll see them listed in both
+the added and removed lists, where the existing value is in removed, and the new value is in added.
+
+The tool doesn't do a remove-then-add, however, to preserve the parameter history.  It merely does a put_paramter with the 
+overwrite flag set to true.
 ## Development
 
 THE BELOW MAY CHANGE
