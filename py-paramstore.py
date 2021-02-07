@@ -119,10 +119,21 @@ def main():
             print('Parameters to remove:')
             print(removed)
 
-            val = input('APPLY these updates? (only "apply" will apply)')
+            val = input('APPLY these updates? (only "apply" will apply) ')
             if val == 'apply':
+                remove_all = False
                 for i in removed:
                     if list(filter(lambda x: x['Name'] == i['Name'], added)) == []:
+                        if not remove_all:
+                            print('CAUTION!!! YOU ARE ABOUT TO REMOVE A PARAMETER!!!')
+                            print('TYPE "remove" IF YOU ARE SURE YOU WANT TO DO THIS')
+                            remval = input('OR "remove all" IF YOU ARE SURE YOU WANT TO REMOVE ALL PARAMETERS IN THE REMOVE LIST: ')
+                            if remval == 'remove all':
+                                remove_all = True
+                                remval = 'remove'
+                            if remval != 'remove':
+                                print('Aborting!')
+                                exit(0)
                         param_store.rm_param(i)
                 for i in added:
                     param_store.put_param(i, overwrite=True)
