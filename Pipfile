@@ -8,7 +8,7 @@ pyinstaller = "*"
 
 [packages]
 boto3 = "*"
-PyYAML = "*"
+PyYAML = ">=5.4"
 
 [requires]
 python_version = "3.8"
