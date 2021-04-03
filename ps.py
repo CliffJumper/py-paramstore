@@ -3,6 +3,8 @@ from botocore.exceptions import ClientError
 import yaml
 
 
+# TODO:  Make an interface that allows us to support multiple parameter types
+# (like AWS Parameter Store, Vault, Azure Key Vault, etc.) under-the-hood.
 class ParameterStore:
     def __init__(self, args):
         region = args.region or 'us-east-1'
@@ -144,6 +146,7 @@ class ParameterStore:
             raise Exception(e)
 
 
+# TODO: Get a real test-harness
 if __name__ == '__main__':
     ps = ParameterStore()
 

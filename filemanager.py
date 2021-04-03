@@ -11,6 +11,8 @@ class FileManagerError(Exception):
     pass
 
 
+# TODO: Get rid of this trash about testing the file formats and create a
+# generic interface, so adding file-type support is easier
 class FileManager:
 
     yamls = ['yaml', 'yml']
@@ -58,6 +60,7 @@ class FileManager:
 
 
 # Test harness
+# This needs serious attention
 if __name__ == '__main__':
     fm = FileManager(file_name='parameters.yml')
 

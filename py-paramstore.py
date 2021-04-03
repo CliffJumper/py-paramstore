@@ -21,7 +21,7 @@ def setup_args():
 
     # Required Key Arg
     parser.add_argument(
-        "key", type=str, help="Parameter Store Key or 'Tree' to manipulate")
+        "key", type=str, nargs='?', help="Parameter Store Key or 'Tree' to manipulate")
 
     parser.add_argument(
         "-r", "--recurse", help="Recurse keys, manipulating the tree (DEFAULT IS TRUE)",
@@ -84,10 +84,13 @@ def main():
     params = []
     args = setup_args()
 
-    # TODO: default to '/' if no key is passed, getting ALL parameters
     if args.key is None:
-        print("ERROR:  Must specify a key to manage")
-        exit(-1)
+        val = input(
+            "You didn't specify a parameter key or path to pull.  Do you want to pull ALL parameters?")
+        if str.upper(val) == "Y" or str.upper(val) == "YES":
+            args.key = "/"
+        else:
+            exit(-1)
 
     # Get AWS Session for Parameter Store
     param_store = ParameterStore(args)
@@ -126,9 +129,12 @@ def main():
                 for i in removed:
                     if list(filter(lambda x: x['Name'] == i['Name'], added)) == []:
                         if not remove_all:
-                            print('CAUTION!!! YOU ARE ABOUT TO REMOVE A PARAMETER!!!')
-                            print('TYPE "remove" IF YOU ARE SURE YOU WANT TO DO THIS')
-                            remval = input('OR "remove all" IF YOU ARE SURE YOU WANT TO REMOVE ALL PARAMETERS IN THE REMOVE LIST: ')
+                            print(
+                                'CAUTION!!! YOU ARE ABOUT TO REMOVE A PARAMETER!!!')
+                            print(
+                                'TYPE "remove" IF YOU ARE SURE YOU WANT TO DO THIS')
+                            remval = input(
+                                'OR "remove all" IF YOU ARE SURE YOU WANT TO REMOVE ALL PARAMETERS IN THE REMOVE LIST: ')
                             if remval == 'remove all':
                                 remove_all = True
                                 remval = 'remove'
