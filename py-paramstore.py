@@ -58,20 +58,31 @@ def get_params(param_store, args):
         path=args.key, decryption=args.decrypt)['Parameters']
     if not params:
         val = input(
-            'No existing remote Paramters found. Should I get the parent tree?')
-        if val.upper() == 'YES' or val.upper == 'Y':
-            parent_path = Path(args.key)
-            params = param_store.get_params(
-                path=str(parent_path.parent), decryption=args.decrypt)['Parameters']
-            if not params:
-                sys.exit('No Parameters Found!')
+            'No existing parameters found in param store.  Shall I create new parameters? (Y/N)')
+        if val.upper() == 'YES' or val.upper() == 'Y':
+            print('Returning: ')
+            print(params)
         else:
             sys.exit('Aborting')
+        # val = input(
+        #     'No existing remote Paramters found. Should I get the parent tree?')
+        # if val.upper() == 'YES' or val.upper == 'Y':
+        #     parent_path = Path(args.key)
+        #     params = param_store.get_params(
+        #         path=str(parent_path.parent), decryption=args.decrypt)['Parameters']
+        #     if not params:
+        #         sys.exit('No Parameters Found!')
+        # else:
+        #     sys.exit('Aborting')
 
     return sorted(params, key=lambda i: i['Name'])
 
 
 def list_compare(list1, list2):
+    if list1 is None:
+        list1 = []
+    if list2 is None:
+        list2 = []
     removed = list(itertools.filterfalse(lambda i: i in list1, list2))
     added = list(itertools.filterfalse(lambda i: i in list2, list1))
     return added, removed
@@ -109,8 +120,12 @@ def main():
         # TODO: Move to helper
         local_params = fm.read()['Parameters']
         if not local_params:
-            sys.exit('No local parameters found!')
-        local_params = sorted(local_params, key=lambda i: i['Name'])
+        #     sys.exit('No local parameters found!')
+            val = input('No parameters found in config.  Do you want to remove all parameters? (Y/N)')
+            if str.upper(val) != "Y" and str.upper(val) != "YES":
+                sys.exit('Aborting')
+        else:
+            local_params = sorted(local_params, key=lambda i: i['Name'])
 
         added, removed = list_compare(local_params, params)
 
